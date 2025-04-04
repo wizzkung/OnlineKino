@@ -27,7 +27,7 @@ namespace OnlineKino.Controllers
             return Ok(movies);
         }
 
-        [HttpGet("GetById{id}")]
+        [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Movies>> GetMovies(int id)
         {
             var movies = await _movieService.GetByIdAsync(id);
@@ -64,14 +64,14 @@ namespace OnlineKino.Controllers
             return NoContent();
         }
 
-        [HttpPost]
+        [HttpPost("AddMovie")]
         public async Task<ActionResult<Movies>> PostMovies(Movies movies)
         {
             await _movieService.AddAsync(movies);
             return CreatedAtAction("GetMovies", new { id = movies.id }, movies);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteMovies(int id)
         {
             var movies = await _movieService.GetByIdAsync(id);

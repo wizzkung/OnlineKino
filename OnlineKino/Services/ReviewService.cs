@@ -13,29 +13,49 @@ namespace OnlineKino.Services
             _options = options;
         }
 
-        public Task AddAsync(Reviews entity)
+        public async Task AddAsync(Reviews entity)
         {
-            throw new NotImplementedException();
+            using (var db = new MyContext(_options))
+            {
+                await db.Database.ExecuteSqlInterpolatedAsync($"EXEC pAddReview {entity.UserId}, {entity.MovieId}, {entity.Rating}, {entity.Comment}");
+            }
         }
 
-        public Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            using (var db = new MyContext(_options))
+            {
+                await db.Database.ExecuteSqlInterpolatedAsync($"EXEC pDeleteReview {id}");
+            }
         }
 
-        public Task<IEnumerable<Reviews>> GetAllAsync()
+        public async Task<IEnumerable<Reviews>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            using (var db = new MyContext(_options))
+            {
+                return await db.Reviews
+                           .FromSqlInterpolated($"EXEC pShowAllReviews")
+                           .ToListAsync();
+            }
         }
 
-        public Task<Reviews> GetByIdAsync(int id)
+        public async Task<Reviews> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            using (var db = new MyContext(_options))
+            {
+                var reviews = await db.Reviews
+             .FromSqlInterpolated($"EXEC pReviewsById {id}")
+             .ToListAsync();
+                return reviews.FirstOrDefault();
+            }
         }
 
-        public Task UpdateAsync(Reviews entity)
+        public async Task UpdateAsync(Reviews entity)
         {
-            throw new NotImplementedException();
+            using (var db = new MyContext(_options))
+            {
+                await db.Database.ExecuteSqlInterpolatedAsync($"EXEC pUpdateReview {entity.id}, {entity.UserId}, {entity.MovieId},  {entity.Rating}, {entity.Comment}");
+            }
         }
     }
 }
