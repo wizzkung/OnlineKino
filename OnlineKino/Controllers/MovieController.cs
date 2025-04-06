@@ -38,7 +38,7 @@ namespace OnlineKino.Controllers
             return Ok(movies);
         }
 
-        [HttpPost("Update{id}")]
+        [HttpPost("Update/{id}")]
         public async Task<IActionResult> PutMovies(int id, Movies movies)
         {
             if (id != movies.id)

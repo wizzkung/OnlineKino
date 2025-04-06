@@ -19,7 +19,17 @@ namespace OnlineKino
             builder.Services.AddScoped<IService<Movies>, MovieService>();
             builder.Services.AddScoped<MovieService>();
             builder.Services.AddScoped<IService<Reviews>, ReviewService>();
-            builder.Services.AddScoped<ReviewService>();    
+            builder.Services.AddScoped<ReviewService>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
             builder.Services.AddControllers();
             
@@ -36,6 +46,7 @@ namespace OnlineKino
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowAll");
 
             app.UseAuthorization();
 
