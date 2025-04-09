@@ -20,6 +20,9 @@ namespace OnlineKino
             builder.Services.AddScoped<MovieService>();
             builder.Services.AddScoped<IService<Reviews>, ReviewService>();
             builder.Services.AddScoped<ReviewService>();
+            builder.Services.AddScoped<IService<Users>, UserService>();
+            builder.Services.AddScoped<IPasswordService, UserService>();
+
 
             builder.Services.AddCors(options =>
             {

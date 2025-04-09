@@ -63,7 +63,7 @@ namespace OnlineKino.Controllers
                     throw;
                 }
             }
-            return NoContent();
+            return Ok();
         }
 
 
