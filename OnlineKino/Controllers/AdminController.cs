@@ -11,25 +11,27 @@ namespace OnlineKino.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly MyContext _context;
-        private readonly AdminService adminService;
-        public AdminController(MyContext context)
+        private readonly IService<Admins> _adminService;
+        private readonly JwtService _jwtService;
+        private readonly IPasswordService _passwordService;
+        public AdminController(IService<Admins> service, JwtService jwt, IPasswordService passwordService)
         {
-            _context = context;
-            adminService = new AdminService(new DbContextOptions<MyContext>());
+            _adminService = service;
+            _jwtService = jwt;
+            _passwordService = passwordService;
         }
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<Admins>>> GetAdmins()
         {
-            var admins = await adminService.GetAllAsync();
+            var admins = await _adminService.GetAllAsync();
             return Ok(admins);
         }
 
         [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Admins>> GetAdmins(int id)
         {
-            var admins = await adminService.GetByIdAsync(id);
+            var admins = await _adminService.GetByIdAsync(id);
             if (admins == null)
             {
                 return NotFound();
@@ -42,7 +44,7 @@ namespace OnlineKino.Controllers
         {
             try
             {
-                await adminService.UpdatePasswordAsync(dto);
+                await _passwordService.UpdatePasswordAsync(dto);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -56,7 +58,7 @@ namespace OnlineKino.Controllers
         {
             try
             {
-                await adminService.AddAsync(admin);
+                await _adminService.AddAsync(admin);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -70,7 +72,7 @@ namespace OnlineKino.Controllers
         {
             try
             {
-                await adminService.DeleteAsync(id);
+                await _adminService.DeleteAsync(id);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -89,26 +91,30 @@ namespace OnlineKino.Controllers
 
             try
             {
-                await adminService.UpdateAsync(admin);
+                await _adminService.UpdateAsync(admin);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!AdminsExist(id))
-                {
+                var exists = await _adminService.GetByIdAsync(id) != null;
+                if (!exists)
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             return Ok();
         }
 
-        private bool AdminsExist(int id)
+
+        [HttpGet("Auth")]
+        public async Task<ActionResult<Admins>> Auth(string login, string password)
         {
-            return _context.Admins.Any(e => e.id == id);
+            var user = await _jwtService.GenerateTokenAsync(login, password);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
         }
+
 
     }
 }

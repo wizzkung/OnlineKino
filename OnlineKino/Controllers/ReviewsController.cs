@@ -13,18 +13,18 @@ namespace OnlineKino.Controllers
     [ApiController]
     public class ReviewsController : ControllerBase
     {
+        private readonly IService<Reviews> _reviewsService;
         private readonly MyContext _context;
-        private readonly ReviewService reviewService;
-        public ReviewsController(MyContext context)
+        public ReviewsController(IService<Reviews> service, MyContext context)
         {
+            _reviewsService = service;
             _context = context;
-            reviewService = new ReviewService(new DbContextOptions<MyContext>());
         }
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<Movies>>> GetReviews()
         {
-            var movies = await reviewService.GetAllAsync();
+            var movies = await _reviewsService.GetAllAsync();
             return Ok(movies);
         }
 
@@ -32,7 +32,7 @@ namespace OnlineKino.Controllers
         [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Movies>> GetReviews(int id)
         {
-            var movies = await reviewService.GetByIdAsync(id);
+            var movies = await _reviewsService.GetByIdAsync(id);
             if (movies == null)
             {
                 return NotFound();
@@ -50,18 +50,14 @@ namespace OnlineKino.Controllers
 
             try
             {
-                await reviewService.UpdateAsync(reviews);
+                await _reviewsService.UpdateAsync(reviews);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ReviewsExist(id))
-                {
+                var exists = await _reviewsService.GetByIdAsync(id) != null;
+                if (!exists)
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             return Ok();
         }
@@ -70,27 +66,23 @@ namespace OnlineKino.Controllers
         [HttpPost("AddReviews")]
         public async Task<ActionResult<Movies>> PostReviews(Reviews reviews)
         {
-            await reviewService.AddAsync(reviews);
+            await _reviewsService.AddAsync(reviews);
             return CreatedAtAction("GetMovies", new { id = reviews.id }, reviews);
         }
 
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteReview(int id)
         {
-            var reviews = await reviewService.GetByIdAsync(id);
+            var reviews = await _reviewsService.GetByIdAsync(id);
             if (reviews == null)
             {
                 return NotFound();
             }
 
-            await reviewService.DeleteAsync(id);
+            await _reviewsService.DeleteAsync(id);
             return Ok();
         }
 
-        private bool ReviewsExist(int id)
-        {
-            return _context.Reviews.Any(e => e.id == id);
-        }
 
         [HttpGet("ExcelLastDay")]
         public async Task<IActionResult> ExcelLastDay()

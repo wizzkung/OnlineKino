@@ -11,25 +11,29 @@ namespace OnlineKino.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly MyContext _context;
-        private readonly UserService userService;
-        public UsersController(MyContext context)
+        private readonly IService<Users> _userService;
+        private readonly JwtService _jwtService;
+        private readonly IPasswordService _passwordService;
+
+        public UsersController(IService<Users> userService, JwtService jwt, IPasswordService passwordService)
         {
-            _context = context;
-            userService = new UserService(new DbContextOptions<MyContext>());
+            _userService = userService;
+            _jwtService = jwt;
+            _passwordService = passwordService;
+
         }
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<Users>>> GetUsers()
         {
-            var users = await userService.GetAllAsync();
+            var users = await _userService.GetAllAsync();
             return Ok(users);
         }
 
         [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Users>> GetUsers(int id)
         {
-            var users = await userService.GetByIdAsync(id);
+            var users = await _userService.GetByIdAsync(id);
             if (users == null)
             {
                 return NotFound();
@@ -42,7 +46,7 @@ namespace OnlineKino.Controllers
         {
             try
             {
-                await userService.UpdatePasswordAsync(dto);
+                await _passwordService.UpdatePasswordAsync(dto);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -56,7 +60,7 @@ namespace OnlineKino.Controllers
         {
             try
             {
-                await userService.AddAsync(users);
+                await _userService.AddAsync(users);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -70,7 +74,7 @@ namespace OnlineKino.Controllers
         {
             try
             {
-                await userService.DeleteAsync(id);
+                await _userService.DeleteAsync(id);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -90,26 +94,30 @@ namespace OnlineKino.Controllers
 
             try
             {
-                await userService.UpdateAsync(user);
+                await _userService.UpdateAsync(user);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!UserExist(id))
-                {
+                var exists = await _userService.GetByIdAsync(id) != null;
+                if (!exists)
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             return Ok();
         }
 
-        private bool UserExist(int id)
+        [HttpGet ("Auth")]
+        public async Task<ActionResult<Users>> Auth(string login, string password)
         {
-            return _context.Users.Any(e => e.id == id);
+            var user = await _jwtService.GenerateTokenAsync(login, password);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
         }
+
+      
 
     }
 }

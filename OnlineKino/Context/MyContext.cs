@@ -10,6 +10,17 @@ namespace OnlineKino.Context
         public DbSet<Users> Users { get; set; }
         public DbSet<Reviews> Reviews { get; set; }
         public DbSet<Admins> Admins { get; set; }
+        public DbSet<TokenResultDTO> TokenResults { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder
+                .Entity<TokenResultDTO>()
+                .HasNoKey()
+                .ToView(null);
+        }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

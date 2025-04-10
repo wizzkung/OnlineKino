@@ -11,26 +11,23 @@ namespace OnlineKino.Controllers
     [ApiController]
     public class MovieController : ControllerBase
     {
-        private readonly MyContext _context;
-        private readonly MovieService _movieService;
-
-        public MovieController(MyContext context, MovieService movieService)
+        private readonly IService<Movies> _moviesService;
+        public MovieController(IService<Movies> service)
         {
-            _context = context;
-            _movieService = movieService;
+            _moviesService = service;
         }
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<Movies>>> GetMovies()
         {
-            var movies = await _movieService.GetAllAsync();
+            var movies = await _moviesService.GetAllAsync();
             return Ok(movies);
         }
 
         [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Movies>> GetMovies(int id)
         {
-            var movies = await _movieService.GetByIdAsync(id);
+            var movies = await _moviesService.GetByIdAsync(id);
             if (movies == null)
             {
                 return NotFound();
@@ -48,45 +45,38 @@ namespace OnlineKino.Controllers
 
             try
             {
-                await _movieService.UpdateAsync(movies);
+                await _moviesService.UpdateAsync(movies);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!MoviesExists(id))
-                {
+                var exists = await _moviesService.GetByIdAsync(id) != null;
+                if (!exists)
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             return Ok();
+ 
         }
 
         [HttpPost("AddMovie")]
         public async Task<ActionResult<Movies>> PostMovies(Movies movies)
         {
-            await _movieService.AddAsync(movies);
+            await _moviesService.AddAsync(movies);
             return CreatedAtAction("GetMovies", new { id = movies.id }, movies);
         }
 
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteMovies(int id)
         {
-            var movies = await _movieService.GetByIdAsync(id);
+            var movies = await _moviesService.GetByIdAsync(id);
             if (movies == null)
             {
                 return NotFound();
             }
 
-            await _movieService.DeleteAsync(id);
+            await _moviesService.DeleteAsync(id);
             return Ok();
         }
 
-        private bool MoviesExists(int id)
-        {
-            return _context.Movies.Any(e => e.id == id);
-        }
     }
 }
