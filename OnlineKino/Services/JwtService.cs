@@ -22,8 +22,6 @@ namespace OnlineKino.Services
         public async Task<TokenResultDTO> GenerateTokenAsync(string login, string password)
         {
             using var db = new MyContext(_options);
-
-            // Изменение запроса: не используем 'Token' в выборке
             var resultList = await db.TokenResults
                 .FromSqlRaw("EXEC pGenerateToken @login, @password",
                             new SqlParameter("@login", login),
@@ -33,7 +31,7 @@ namespace OnlineKino.Services
             var user = resultList.FirstOrDefault();
             if (user == null || user.Status == 0)
             {
-                // Возвращаем пустой объект, если статус 0 или пользователь не найден
+                
                 return new TokenResultDTO
                 {
                     Status = 0,
@@ -44,7 +42,7 @@ namespace OnlineKino.Services
                 };
             }
 
-            // Генерация токена на C# стороне
+           
             var claims = new List<Claim>
     {
         new Claim(JwtRegisteredClaimNames.Sub, user.Login),
@@ -62,7 +60,7 @@ namespace OnlineKino.Services
                                 signingCredentials: creds);
             var tokenString = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            // Теперь добавляем токен в результат
+            // добавил токен в результат
             return new TokenResultDTO
             {
                 Status = 1,
@@ -71,7 +69,7 @@ namespace OnlineKino.Services
                 Email = user.Email,
                 Login = user.Login,
                 Role = user.Role,
-                Token = tokenString // Генерация и возврат токена
+                Token = tokenString 
             };
         }
 
