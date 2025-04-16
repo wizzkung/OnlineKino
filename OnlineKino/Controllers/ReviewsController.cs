@@ -67,7 +67,7 @@ namespace OnlineKino.Controllers
         public async Task<ActionResult<Movies>> PostReviews(Reviews reviews)
         {
             await _reviewsService.AddAsync(reviews);
-            return CreatedAtAction("GetMovies", new { id = reviews.id }, reviews);
+            return Ok(reviews);
         }
 
         [HttpDelete("Delete/{id}")]
